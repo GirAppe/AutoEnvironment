@@ -148,22 +148,47 @@ public extension Environment {
             window.windowLevel = UIWindow.Level.alert + 1
             window.isUserInteractionEnabled = false
 
+            let dummy = UIViewController()
+            dummy.view.backgroundColor = UIColor.clear
+            window.rootViewController = dummy
+
+            let marginRightView = UIView()
+            marginRightView.translatesAutoresizingMaskIntoConstraints = false
+            dummy.view.addSubview(marginRightView)
+            marginRightView.backgroundColor = .clear
+            if #available(iOS 11.0, *) {
+                marginRightView.topAnchor.constraint(equalTo: dummy.view.safeAreaLayoutGuide.bottomAnchor).isActive = true
+            } else {
+                marginRightView.topAnchor.constraint(equalTo: dummy.bottomLayoutGuide.topAnchor).isActive = true
+            }
+            marginRightView.bottomAnchor.constraint(equalTo: dummy.view.bottomAnchor).isActive = true
+            marginRightView.rightAnchor.constraint(equalTo: dummy.view.rightAnchor, constant: 0).isActive = true
+            marginRightView.widthAnchor.constraint(
+                equalTo: marginRightView.heightAnchor,
+                multiplier: 0.5
+            ).isActive = true
+
+            let marginLeftView = UIView()
+            marginLeftView.translatesAutoresizingMaskIntoConstraints = false
+            dummy.view.addSubview(marginLeftView)
+            marginLeftView.backgroundColor = .clear
+            marginLeftView.bottomAnchor.constraint(equalTo: dummy.view.bottomAnchor).isActive = true
+            marginLeftView.leftAnchor.constraint(equalTo: dummy.view.leftAnchor, constant: 0).isActive = true
+            marginLeftView.widthAnchor.constraint(equalTo: marginRightView.widthAnchor).isActive = true
+            marginLeftView.heightAnchor.constraint(equalTo: marginRightView.heightAnchor).isActive = true
+
             let label = UILabel()
             label.translatesAutoresizingMaskIntoConstraints = false
+            dummy.view.addSubview(label)
+            label.rightAnchor.constraint(equalTo: marginRightView.leftAnchor, constant: -4).isActive = true
+            label.leftAnchor.constraint(equalTo: marginLeftView.rightAnchor, constant: 4).isActive = true
+            label.bottomAnchor.constraint(equalTo: dummy.view.bottomAnchor, constant: -1).isActive = true
+            label.heightAnchor.constraint(equalToConstant: 12).isActive = true
             label.font = UIFont.systemFont(ofSize: 8)
             label.text = Environment.current.formattedInfo
             label.textAlignment = textAlignment
             label.textColor = textColor
             label.shadowColor = shadowColor
-
-            let dummy = UIViewController()
-            dummy.view.backgroundColor = UIColor.clear
-            window.rootViewController = dummy
-            dummy.view.addSubview(label)
-            label.rightAnchor.constraint(equalTo: dummy.view.rightAnchor, constant: 2).isActive = true
-            label.leftAnchor.constraint(equalTo: dummy.view.leftAnchor, constant: 2).isActive = true
-            label.bottomAnchor.constraint(equalTo: dummy.view.bottomAnchor, constant: 2).isActive = true
-            label.heightAnchor.constraint(equalToConstant: 12).isActive = true
             dummy.view.bringSubviewToFront(label)
 
             self.uiwindow = window
