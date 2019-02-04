@@ -5,13 +5,16 @@ import PackageDescription
 
 let package = Package(
     name: "AutoEnvironment",
+    products: [
+        .executable(name: "autoenvironment", targets: ["AutoEnvironment"]),
+    ],
     dependencies: [
         .package(url: "https://github.com/tuist/xcodeproj.git", .upToNextMajor(from: "6.5.0")),
         .package(url: "https://github.com/jianstm/Crayon", .upToNextMajor(from: "0.0.1"))
     ],
     targets: [
         .target(
-            name: "autoenvironment",
+            name: "AutoEnvironment",
             dependencies: [
                 "xcodeproj",
                 "Crayon",
@@ -19,7 +22,7 @@ let package = Package(
         .testTarget(
             name: "AutoEnvironmentTests",
             dependencies: [
-                "autoenvironment"
+                "AutoEnvironment"
         ]),
     ]
 )
