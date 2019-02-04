@@ -184,7 +184,7 @@ public class Generator {
 
 private let template =
 """
-// Generated with AutoEnvironment 0.1.1 by Andrzej Michnia @GirAppe
+// Generated with AutoEnvironment \(version) by Andrzej Michnia @GirAppe
 
 import Foundation
 #if os(iOS)
@@ -218,10 +218,10 @@ public extension {{ENV_NAME}} {
     public var formattedInfo: String {
         var value = (formatForEnvironment[self] ?? defaultFormat).string
         value = value.replacingOccurrences(
-            of: Format.Key.environment.rawValue,
+            of: Format.Key.environmentName.rawValue,
             with: name)
         value = value.replacingOccurrences(
-            of: Format.Key.environmentAbbreviated.rawValue,
+            of: Format.Key.environmentFirstLetter.rawValue,
             with: abbreviatedName)
         value = value.replacingOccurrences(
             of: Format.Key.versionNumber.rawValue,
@@ -242,8 +242,8 @@ public extension {{ENV_NAME}} {
 
     public enum Format {
         public enum Key: String {
-            case environment
-            case environmentAbbreviated
+            case environmentName
+            case environmentFirstLetter
             case versionNumber
             case buildNumber
         }
@@ -258,7 +258,7 @@ public extension {{ENV_NAME}} {
             switch self {
             case .none: return ""
             case .simple: return "v\\(Key.versionNumber) (\\(Key.buildNumber))"
-            case .full: return "\\(Key.environment) v\\(Format.simple.string)"
+            case .full: return "\\(Key.environmentName) v\\(Format.simple.string)"
             case let .just(key): return key.rawValue
             case let .custom(format): return format
             }

@@ -7,6 +7,7 @@ import Crayon
 
 // MARK: - Requirements
 var isSilent: Bool = false
+let version = "0.1.2"
 
 let requirements = Requirements(
     usage: "autoenvironment <options>",
@@ -20,6 +21,14 @@ let help = Argument(
     kind: Bool.self
 )
 requirements.add(help)
+
+let toolVersion = Argument(
+    info: "\tPrint tool version",
+    name: "--version",
+    shortName: "-v",
+    kind: Bool.self
+)
+requirements.add(toolVersion)
 
 let path = Argument(
     info: "\t[Required] Path to xcode project",
@@ -99,12 +108,16 @@ guard try !parsed.value(for: help) else {
     exit(0)
 }
 
+guard try !parsed.value(for: toolVersion) else {
+    print("Version v\(version) \(Environment.current.name)")
+    exit(0)
+}
+
 guard let project = try? parsed.value(for: path) else { parsingFailure() }
 guard let outputUrl = try? parsed.value(for: output) else { parsingFailure() }
 guard let target = try? parsed.value(for: target) else { parsingFailure() }
 
 if !isSilent {
-    print("AutoEnvironemt - running in \(Environment.current.name)")
     print("\nScaning xcode project:\n  \(crayon.blue.on(project.path))")
 }
 
