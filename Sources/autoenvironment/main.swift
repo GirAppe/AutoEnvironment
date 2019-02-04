@@ -43,14 +43,13 @@ let output = Argument(
 )
 requirements.add(output)
 
-let updateBuildFlags = Argument(
-    info: "\t[Optional] Should update build flags. If false, you need to update them manually",
-    name: "--flags",
+let skipUpdateFlags = OptionalArgument(
+    info: "\t[Optional] Skip update build flags. If present, you need to update them manually",
+    name: "--no-flags",
     shortName: "-f",
-    kind: Bool.self,
-    defaultValue: true
+    kind: Bool.self
 )
-requirements.add(updateBuildFlags)
+requirements.add(skipUpdateFlags)
 
 let defaultConfig = OptionalArgument(
     info: "[Optional] Default configuration (e.x. Release)",
@@ -105,7 +104,8 @@ do {
         defaultConfig: try parsed.value(for: defaultConfig)
     )
 
-    if try parsed.value(for: updateBuildFlags) {
+    let skip = try parsed.value(for: skipUpdateFlags) ?? false
+    if !skip {
         try generator.updateCustomSwiftCompilerFlags(
             for: target,
             to: outputUrl
