@@ -27,7 +27,8 @@ public class Generator {
     public func generateEnvironment(
         for target: String,
         to output: URL,
-        enumName: String = "Environment"
+        enumName: String = "Environment",
+        defaultConfig: String? = nil
     ) throws {
         let targets = project.pbxproj.targets(named: target)
 
@@ -39,38 +40,48 @@ public class Generator {
 
         try generateEnvironment(
             for: configurations,
+            in: target,
             to: output,
-            enumName: enumName
+            enumName: enumName,
+            defaultConfig: defaultConfig
         )
     }
 
     public func generateEnvironment(
         for configurations: [String],
+        in target: PBXTarget,
         to output: URL,
-        enumName: String = "Environment"
+        enumName: String = "Environment",
+        defaultConfig: String? = nil
     ) throws {
         if output.lastPathComponent.hasSuffix(".swift") {
             try generateEnvironment(
                 for: configurations,
+                in: target,
                 directory: output.deletingLastPathComponent(),
                 filename: output.lastPathComponent,
-                enumName: enumName
+                enumName: enumName,
+                defaultConfig: defaultConfig
             )
         } else {
             try generateEnvironment(
                 for: configurations,
+                in: target,
                 directory: output,
                 filename: "Environment.generated.swift",
-                enumName: enumName
+                enumName: enumName,
+                defaultConfig: defaultConfig
             )
         }
     }
 
     public func generateEnvironment(
         for configurations: [String],
+        in target: PBXTarget,
         directory: URL,
         filename: String,
-        enumName: String = "Environment"
+        enumName: String = "Environment",
+        defaultConfig: String? = nil
     ) throws {
         // Prepare
         let cases = configurations.map { name -> String in
@@ -85,19 +96,46 @@ public class Generator {
             """
         }.joined(separator: "\n")
 
+        let defaultEnvironment: String = {
+            if let config = defaultConfig?.lowercased() {
+                return "\t\treturn .\(config)"
+            } else {
+                return "\t\t// Add OTHER_SWIFT_FLAGS build settings with flags like -DDEBUG, -DRELEASE"
+            }
+        }()
+
         // Generate
         var contents = template
         contents.replace(key: TemplateKey.enumName, with: enumName)
         contents.replace(key: TemplateKey.cases, with: cases)
         contents.replace(key: TemplateKey.current, with: current)
+        contents.replace(key: TemplateKey.defaultConfig, with: defaultEnvironment)
 
         // Write
         guard let data = contents.data(using: encoding) else { throw Error.writingError }
         try data.write(to: directory.appendingPathComponent(filename))
+    }
+
+    public func updateCustomSwiftCompilerFlags(
+        for target: String,
+        to output: URL
+    ) throws {
+        let targets = project.pbxproj.targets(named: target)
+
+        guard let target = targets.first else { throw Error.targetNotFound }
 
         // Update project compile flags
+        target.buildConfigurationList?.buildConfigurations.forEach { buildConfig in
+            let flag = "-D\(buildConfig.name.uppercased())"
+            var flags = buildConfig.buildSettings["OTHER_SWIFT_FLAGS"] as? [String] ?? []
+            guard !flags.contains(flag) else { return }
 
-        try project.write(path: path, override: true)
+            flags.append(flag)
+            buildConfig.buildSettings["OTHER_SWIFT_FLAGS"] = flags
+        }
+        project.pbxproj.add(object: target)
+
+        try project.pbxproj.write(path: XcodeProj.pbxprojPath(path), override: true)
     }
 
     // MARK: - Helpers
@@ -105,6 +143,7 @@ public class Generator {
         case enumName = "{{ENV_NAME}}"
         case cases = "{{ENV_CASES}}"
         case current = "{{ENV_CURRENT}}"
+        case defaultConfig = "{{ENV_DEFAULT}}"
     }
 
     private let template = """
@@ -121,8 +160,9 @@ public class Generator {
             }
 
     {{ENV_CURRENT}}
+            #else
+    {{ENV_DEFAULT}}
             #endif
-            // If missing return - add swift compiler flags like -DRELEASE etc.
         }
     }
 

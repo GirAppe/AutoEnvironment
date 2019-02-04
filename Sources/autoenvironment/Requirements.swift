@@ -117,7 +117,7 @@ class OptionalArgument<T: Parsable>: AnyArgument {
     }
 
     var description: String {
-        return "\t\(name),\t\(shortName)\t\(info), optional: \(isOptional)"
+        return "\t\(name), \(shortName)\t\(info), optional: \(isOptional)"
     }
 }
 
@@ -151,9 +151,9 @@ class Argument<T: Parsable>: AnyArgument {
 
     var description: String {
         if let def = defaultValue {
-            return "\t\(name),\t\(shortName)\t\(info), default: \(def)"
+            return "\t\(name), \(shortName)\t\(info), default: \(def)"
         } else {
-            return "\t\(name),\t\(shortName)\t\(info)"
+            return "\t\(name), \(shortName)\t\(info)"
         }
     }
 }

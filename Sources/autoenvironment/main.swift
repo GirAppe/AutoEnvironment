@@ -12,7 +12,7 @@ let requirements = Requirements(
 )
 
 let help = Argument(
-    info: "Show available options",
+    info: "\tShow available options",
     name: "--help",
     shortName: "-h",
     kind: Bool.self
@@ -20,7 +20,7 @@ let help = Argument(
 requirements.add(help)
 
 let path = Argument(
-    info: "[Required] Path to xcode project",
+    info: "\t[Required] Path to xcode project",
     name: "--path",
     shortName: "-p",
     kind: URL.self
@@ -28,7 +28,7 @@ let path = Argument(
 requirements.add(path)
 
 let target = Argument(
-    info: "[Required] Target name",
+    info: "\t[Required] Target name",
     name: "--target",
     shortName: "-t",
     kind: String.self
@@ -36,12 +36,38 @@ let target = Argument(
 requirements.add(target)
 
 let output = Argument(
-    info: "[Required] Output directory (with optional filename.swift)",
+    info: "\t[Required] Output directory (with optional filename.swift)",
     name: "--output",
     shortName: "-o",
     kind: URL.self
 )
 requirements.add(output)
+
+let updateBuildFlags = Argument(
+    info: "\t[Optional] Should update build flags. If false, you need to update them manually",
+    name: "--flags",
+    shortName: "-f",
+    kind: Bool.self,
+    defaultValue: true
+)
+requirements.add(updateBuildFlags)
+
+let defaultConfig = OptionalArgument(
+    info: "[Optional] Default configuration (e.x. Release)",
+    name: "--default-config",
+    shortName: "-d",
+    kind: String.self
+)
+requirements.add(defaultConfig)
+
+let enumName = Argument(
+    info: "[Optional] Generated Environment enum name",
+    name: "--default-name",
+    shortName: "-n",
+    kind: String.self,
+    defaultValue: "Environment"
+)
+requirements.add(enumName)
 
 // MARK: - Main
 
@@ -72,9 +98,23 @@ print("Will output generated file to: \(outputUrl.absoluteString)")
 
 do {
     let generator = try Generator(project: project)
-    try generator.generateEnvironment(for: target, to: outputUrl)
+    try generator.generateEnvironment(
+        for: target,
+        to: outputUrl,
+        enumName: try parsed.value(for: enumName),
+        defaultConfig: try parsed.value(for: defaultConfig)
+    )
+
+    if try parsed.value(for: updateBuildFlags) {
+        try generator.updateCustomSwiftCompilerFlags(
+            for: target,
+            to: outputUrl
+        )
+    }
+
     exit(0)
 } catch {
     print("Failed: \(error)")
+    print(parsed.errors.joined(separator: "\n"))
     exit(1)
 }
