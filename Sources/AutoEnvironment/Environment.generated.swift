@@ -1,4 +1,4 @@
-// Generated with AutoEnvironment by Andrzej Michnia @GirAppe
+// Generated with AutoEnvironment 0.1.1 by Andrzej Michnia @GirAppe
 
 import Foundation
 #if os(iOS)
@@ -42,7 +42,7 @@ public extension Environment {
             of: Format.Key.environmentAbbreviated.rawValue,
             with: abbreviatedName)
         value = value.replacingOccurrences(
-            of: Format.Key.version.rawValue,
+            of: Format.Key.versionNumber.rawValue,
             with: appVersion)
         value = value.replacingOccurrences(
             of: Format.Key.buildNumber.rawValue,
@@ -50,20 +50,20 @@ public extension Environment {
         return value
     }
 
-    public static func setFormat(_ format: Format) {
+    public static func setVersionFormat(_ format: Format) {
         defaultFormat = format
     }
 
-    public static func setFormat(_ format: Format, for environment: Environment) {
+    public static func setVersionFormat(_ format: Format, for environment: Environment) {
         formatForEnvironment[environment] = format
     }
 
     public enum Format {
         public enum Key: String {
-            case environment = "{{E}}"
-            case environmentAbbreviated = "{{AE}}"
-            case version = "{{V}}"
-            case buildNumber = "{{B}}"
+            case environment
+            case environmentAbbreviated
+            case versionNumber
+            case buildNumber
         }
 
         case none
@@ -75,7 +75,7 @@ public extension Environment {
         public var string: String {
             switch self {
             case .none: return ""
-            case .simple: return "v\(Key.version) (\(Key.buildNumber))"
+            case .simple: return "v\(Key.versionNumber) (\(Key.buildNumber))"
             case .full: return "\(Key.environment) v\(Format.simple.string)"
             case let .just(key): return key.rawValue
             case let .custom(format): return format
@@ -126,12 +126,12 @@ public extension Environment {
             didSet { update() }
         }
 
-        public func show() {
+        public func showVersion() {
             setupWindowIfNeeded()
             uiwindow?.isHidden = false
         }
 
-        public func hide() {
+        public func hideVersion() {
             uiwindow?.isHidden = true
         }
 
@@ -151,7 +151,7 @@ public extension Environment {
             let label = UILabel()
             label.translatesAutoresizingMaskIntoConstraints = false
             label.font = UIFont.systemFont(ofSize: 8)
-            label.text = Environment.current.versionInfo
+            label.text = Environment.current.formattedInfo
             label.textAlignment = textAlignment
             label.textColor = textColor
             label.shadowColor = shadowColor
@@ -171,11 +171,11 @@ public extension Environment {
         }
 
         private func update() {
-            label?.text = Environment.current.versionInfo
+            label?.text = Environment.current.formattedInfo
             label?.textAlignment = textAlignment
             label?.textColor = textColor
             label?.shadowColor = shadowColor
-            isHidden ? hide() : show()
+            isHidden ? hideVersion() : showVersion()
         }
     }
 }
