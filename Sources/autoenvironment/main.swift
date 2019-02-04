@@ -3,8 +3,10 @@
 import Foundation
 import xcodeproj
 import PathKit
+import Crayon
 
 // MARK: - Requirements
+var isSilent: Bool = false
 
 let requirements = Requirements(
     usage: "autoenvironment <options>",
@@ -44,7 +46,7 @@ let output = Argument(
 requirements.add(output)
 
 let skipUpdateFlags = OptionalArgument(
-    info: "\t[Optional] Skip update build flags. If present, you need to update them manually",
+    info: "\t[Optional] Skip update build flags. If flag present, you need to update them manually",
     name: "--no-flags",
     shortName: "-f",
     kind: Bool.self
@@ -68,10 +70,27 @@ let enumName = Argument(
 )
 requirements.add(enumName)
 
+let silent = OptionalArgument(
+    info: "\t[Optional] If flag present, supresses all console logs and prints",
+    name: "--silent",
+    shortName: "-s",
+    kind: Bool.self
+)
+requirements.add(silent)
+
 // MARK: - Main
 
-guard let parsed = try? requirements.parse(CommandLine.arguments) else {
-    print("Failed. Wrong argumtns")
+guard let parsed = try? requirements.parse(CommandLine.arguments) else { exit(1) }
+
+isSilent = try parsed.value(for: silent) ?? false
+
+let parsingFailure: () -> Swift.Never = {
+    if !isSilent {
+        print(crayon.red.on("Failure: "))
+        print(crayon.red.on(parsed.errors.joined(separator: "\n")))
+        print("")
+        requirements.printInfo()
+    }
     exit(1)
 }
 
@@ -80,41 +99,28 @@ guard try !parsed.value(for: help) else {
     exit(0)
 }
 
-guard
-    let project = try? parsed.value(for: path),
-    let outputUrl = try? parsed.value(for: output),
-    let target = try? parsed.value(for: target)
-else {
-    print("Failure: ")
-    print(parsed.errors.joined(separator: "\n"))
-    print("")
-    requirements.printInfo()
-    exit(0)
+guard let project = try? parsed.value(for: path) else { parsingFailure() }
+guard let outputUrl = try? parsed.value(for: output) else { parsingFailure() }
+guard let target = try? parsed.value(for: target) else { parsingFailure() }
+
+if !isSilent {
+    print("AutoEnvironemt - running in \(Environment.current.name)")
+    print("\nScaning xcode project:\n  \(crayon.blue.on(project.path))")
 }
 
-print("Will scan xcode project: \(project.absoluteString)")
-print("Will output generated file to: \(outputUrl.absoluteString)")
+let generator = try Generator(project: project)
+try generator.generateEnvironment(
+    for: target,
+    to: outputUrl,
+    enumName: try parsed.value(for: enumName),
+    defaultConfig: try parsed.value(for: defaultConfig)
+)
 
-do {
-    let generator = try Generator(project: project)
-    try generator.generateEnvironment(
-        for: target,
-        to: outputUrl,
-        enumName: try parsed.value(for: enumName),
-        defaultConfig: try parsed.value(for: defaultConfig)
-    )
-
-    let skip = try parsed.value(for: skipUpdateFlags) ?? false
-    if !skip {
-        try generator.updateCustomSwiftCompilerFlags(
-            for: target,
-            to: outputUrl
-        )
-    }
-
-    exit(0)
-} catch {
-    print("Failed: \(error)")
-    print(parsed.errors.joined(separator: "\n"))
-    exit(1)
+let skip = try parsed.value(for: skipUpdateFlags) ?? false
+if skip {
+    try generator.skipUpdateCustomSwiftCompilerFlags(for: target)
+} else {
+    try generator.updateCustomSwiftCompilerFlags(for: target, to: outputUrl)
 }
+
+exit(0)

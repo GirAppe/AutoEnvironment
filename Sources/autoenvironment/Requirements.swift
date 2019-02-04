@@ -184,6 +184,8 @@ class Requirements {
     }
 
     func printInfo() {
+        guard !isSilent else { return }
+        
         print("OVERVIEW: \(overview)\n")
         print("USAGE: \(usage)\n")
         print("OPTIONS:")
