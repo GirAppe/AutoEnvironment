@@ -11,7 +11,7 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "AutoEnvironment",
+            name: "autoenvironment",
             dependencies: [
                 "xcodeproj",
                 "Crayon",
@@ -19,7 +19,7 @@ let package = Package(
         .testTarget(
             name: "AutoEnvironmentTests",
             dependencies: [
-                "AutoEnvironment"
+                "autoenvironment"
         ]),
     ]
 )
