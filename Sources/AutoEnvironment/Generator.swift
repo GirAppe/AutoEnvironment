@@ -100,7 +100,8 @@ public class Generator {
         var cases = configurations.map { name -> String in
             return "    case \(name.lowercased()) = \"\(name.uppercased())\""
         }.joined(separator: "\n")
-        if defaultConfig == nil {
+
+        if defaultConfig == nil && !configurations.contains("Release") {
             cases.append("\n    case unknown")
         }
 
@@ -115,6 +116,8 @@ public class Generator {
         let defaultEnvironment: String = {
             if let config = defaultConfig?.lowercased() {
                 return "        return .\(config)"
+            } else if configurations.contains("Release") {
+                return "        return .release"
             } else {
                 return "        return .unknown"
             }
@@ -267,8 +270,8 @@ public extension {{ENV_NAME}} {
         public var string: String {
             switch self {
             case .none: return ""
-            case .simple: return "v\\(Key.versionNumber) (\\(Key.buildNumber))"
-            case .full: return "\\(Key.environmentName) v\\(Format.simple.string)"
+            case .simple: return "\\(Key.versionNumber) (\\(Key.buildNumber))"
+            case .full: return "\\(Key.environmentName) \\(Format.simple.string)"
             case let .just(key): return key.rawValue
             case let .custom(format): return format
             }
@@ -338,7 +341,11 @@ public extension {{ENV_NAME}} {
 
             let window = UIWindow(frame: UIScreen.main.bounds)
             window.backgroundColor = .clear
+            #if swift(>=4.2)
             window.windowLevel = UIWindow.Level.alert + 1
+            #else
+            window.windowLevel = UIWindowLevelAlert + 1
+            #endif
             window.isUserInteractionEnabled = false
 
             let dummy = UIViewController()
@@ -382,7 +389,11 @@ public extension {{ENV_NAME}} {
             label.textAlignment = textAlignment
             label.textColor = textColor
             label.shadowColor = shadowColor
+            #if swift(>=4.0)
+            dummy.view.bringSubview(toFront: label)
+            #else
             dummy.view.bringSubviewToFront(label)
+            #endif
 
             self.uiwindow = window
             self.label = label

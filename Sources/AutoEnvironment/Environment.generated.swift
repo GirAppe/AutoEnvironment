@@ -9,7 +9,6 @@ import UIKit
 public enum Environment: String {
     case debug = "DEBUG"
     case release = "RELEASE"
-    case unknown
 
     public static var current: Environment {
         if let override = Environment.Override.current {
@@ -21,7 +20,7 @@ public enum Environment: String {
         #elseif RELEASE
         return .release
         #else
-        return .unknown
+        return .release
         #endif
     }
 
@@ -153,7 +152,11 @@ public extension Environment {
 
             let window = UIWindow(frame: UIScreen.main.bounds)
             window.backgroundColor = .clear
+            #if swift(>=4.2)
             window.windowLevel = UIWindow.Level.alert + 1
+            #else
+            window.windowLevel = UIWindowLevelAlert + 1
+            #endif
             window.isUserInteractionEnabled = false
 
             let dummy = UIViewController()
@@ -197,7 +200,11 @@ public extension Environment {
             label.textAlignment = textAlignment
             label.textColor = textColor
             label.shadowColor = shadowColor
+            #if swift(>=4.0)
+            dummy.view.bringSubview(toFront: label)
+            #else
             dummy.view.bringSubviewToFront(label)
+            #endif
 
             self.uiwindow = window
             self.label = label
