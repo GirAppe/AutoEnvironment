@@ -7,7 +7,7 @@ import Crayon
 
 // MARK: - Requirements
 var isSilent: Bool = false
-let version = "0.1.2"
+let version = "0.1.4"
 
 let requirements = Requirements(
     usage: "autoenvironment <options>",
@@ -109,7 +109,7 @@ guard try !parsed.value(for: help) else {
 }
 
 guard try !parsed.value(for: toolVersion) else {
-    print("Version v\(version) \(Environment.current.name)")
+    print("\(version) \(Environment.current.name)")
     exit(0)
 }
 
