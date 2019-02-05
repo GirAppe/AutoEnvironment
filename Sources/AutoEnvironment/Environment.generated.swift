@@ -1,4 +1,4 @@
-// Generated with AutoEnvironment 0.1.2 by Andrzej Michnia @GirAppe
+// Generated with AutoEnvironment 0.1.4 by Andrzej Michnia @GirAppe
 
 import Foundation
 #if os(iOS)
@@ -7,20 +7,21 @@ import UIKit
 
 /// Abstraction for build configuration/environment
 public enum Environment: String {
-	case debug = "DEBUG"
-	case release = "RELEASE"
+    case debug = "DEBUG"
+    case release = "RELEASE"
+    case unknown
 
     public static var current: Environment {
         if let override = Environment.Override.current {
             return override
         }
 
-		#if DEBUG
-		return .debug
-		#elseif RELEASE
-		return .release
+        #if DEBUG
+        return .debug
+        #elseif RELEASE
+        return .release
         #else
-		return .release
+        return .unknown
         #endif
     }
 
@@ -52,10 +53,16 @@ public extension Environment {
 
     public static func setVersionFormat(_ format: Format) {
         defaultFormat = format
+        #if os(iOS)
+        Environment.info.update()
+        #endif
     }
 
     public static func setVersionFormat(_ format: Format, for environment: Environment) {
         formatForEnvironment[environment] = format
+        #if os(iOS)
+        Environment.info.update()
+        #endif
     }
 
     public enum Format {
@@ -127,12 +134,13 @@ public extension Environment {
         }
 
         public func showVersion() {
-            setupWindowIfNeeded()
-            uiwindow?.isHidden = false
+            isHidden = false
+            update()
         }
 
         public func hideVersion() {
-            uiwindow?.isHidden = true
+            isHidden = true
+            update()
         }
 
         private var uiwindow: UIWindow?
@@ -195,12 +203,16 @@ public extension Environment {
             self.label = label
         }
 
-        private func update() {
+        fileprivate func update() {
+            if !isHidden {
+                setupWindowIfNeeded()
+            }
             label?.text = Environment.current.formattedInfo
             label?.textAlignment = textAlignment
             label?.textColor = textColor
             label?.shadowColor = shadowColor
-            isHidden ? hideVersion() : showVersion()
+
+            uiwindow?.isHidden = isHidden
         }
     }
 }

@@ -31,15 +31,15 @@ let toolVersion = Argument(
 requirements.add(toolVersion)
 
 let path = Argument(
-    info: "\t[Required] Path to xcode project",
+    info: "\tPath to xcode project",
     name: "--path",
     shortName: "-p",
     kind: URL.self
 )
 requirements.add(path)
 
-let target = Argument(
-    info: "\t[Required] Target name",
+let target = OptionalArgument(
+    info: "\tTarget name. If not specified, will use Project name",
     name: "--target",
     shortName: "-t",
     kind: String.self
@@ -47,7 +47,7 @@ let target = Argument(
 requirements.add(target)
 
 let output = Argument(
-    info: "\t[Required] Output directory (with optional filename.swift)",
+    info: "\tOutput directory (with optional filename.swift)",
     name: "--output",
     shortName: "-o",
     kind: URL.self
@@ -55,7 +55,7 @@ let output = Argument(
 requirements.add(output)
 
 let skipUpdateFlags = OptionalArgument(
-    info: "\t[Optional] Skip update build flags. If flag present, you need to update them manually",
+    info: "\tSkip update build flags. If flag present, you need to update them manually",
     name: "--no-flags",
     shortName: "-f",
     kind: Bool.self
@@ -63,7 +63,7 @@ let skipUpdateFlags = OptionalArgument(
 requirements.add(skipUpdateFlags)
 
 let defaultConfig = OptionalArgument(
-    info: "[Optional] Default configuration (e.x. Release)",
+    info: "Default configuration (e.x. Release)",
     name: "--default-config",
     shortName: "-d",
     kind: String.self
@@ -71,7 +71,7 @@ let defaultConfig = OptionalArgument(
 requirements.add(defaultConfig)
 
 let enumName = Argument(
-    info: "[Optional] Generated Environment enum name",
+    info: "Generated Environment enum name",
     name: "--default-name",
     shortName: "-n",
     kind: String.self,
@@ -80,7 +80,7 @@ let enumName = Argument(
 requirements.add(enumName)
 
 let silent = OptionalArgument(
-    info: "\t[Optional] If flag present, supresses all console logs and prints",
+    info: "\tIf flag present, supresses all console logs and prints",
     name: "--silent",
     shortName: "-s",
     kind: Bool.self
@@ -115,7 +115,8 @@ guard try !parsed.value(for: toolVersion) else {
 
 guard let project = try? parsed.value(for: path) else { parsingFailure() }
 guard let outputUrl = try? parsed.value(for: output) else { parsingFailure() }
-guard let target = try? parsed.value(for: target) else { parsingFailure() }
+
+let targetName = try parsed.value(for: target)
 
 if !isSilent {
     print("\nScaning xcode project:\n  \(crayon.blue.on(project.path))")
@@ -123,7 +124,7 @@ if !isSilent {
 
 let generator = try Generator(project: project)
 try generator.generateEnvironment(
-    for: target,
+    for: targetName,
     to: outputUrl,
     enumName: try parsed.value(for: enumName),
     defaultConfig: try parsed.value(for: defaultConfig)
@@ -131,9 +132,9 @@ try generator.generateEnvironment(
 
 let skip = try parsed.value(for: skipUpdateFlags) ?? false
 if skip {
-    try generator.skipUpdateCustomSwiftCompilerFlags(for: target)
+    try generator.skipUpdateCustomSwiftCompilerFlags(for: targetName)
 } else {
-    try generator.updateCustomSwiftCompilerFlags(for: target, to: outputUrl)
+    try generator.updateCustomSwiftCompilerFlags(for: targetName, to: outputUrl)
 }
 
 exit(0)

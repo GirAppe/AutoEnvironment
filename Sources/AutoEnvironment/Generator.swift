@@ -26,12 +26,14 @@ public class Generator {
     // MARK: - Public interface
 
     public func generateEnvironment(
-        for target: String,
+        for target: String?,
         to output: URL,
         enumName: String = "Environment",
         defaultConfig: String? = nil
     ) throws {
-        let targets = project.pbxproj.targets(named: target)
+        let targetName = target ?? path.lastComponent.replacingOccurrences(of: ".xcodeproj", with: "")
+        print("Looking for target with name: \(targetName)")
+        let targets = project.pbxproj.targets(named: targetName)
 
         guard let target = targets.first else { throw Error.targetNotFound }
         guard targets.count == 1 else { throw Error.multipleTargetsWithSameName }
@@ -96,25 +98,25 @@ public class Generator {
 
         // Prepare
         var cases = configurations.map { name -> String in
-            return "\tcase \(name.lowercased()) = \"\(name.uppercased())\""
+            return "    case \(name.lowercased()) = \"\(name.uppercased())\""
         }.joined(separator: "\n")
         if defaultConfig == nil {
-            cases.append("\n\tcase unknown")
+            cases.append("\n    case unknown")
         }
 
         let current = configurations.enumerated().map { offet, name -> String in
             let statement = offet == 0 ? "#if" : "#elseif"
             return """
-            \t\t\(statement) \(name.uppercased())
-            \t\treturn .\(name.lowercased())
+                    \(statement) \(name.uppercased())
+                    return .\(name.lowercased())
             """
         }.joined(separator: "\n")
 
         let defaultEnvironment: String = {
             if let config = defaultConfig?.lowercased() {
-                return "\t\treturn .\(config)"
+                return "        return .\(config)"
             } else {
-                return "\t\treturn .unknown"
+                return "        return .unknown"
             }
         }()
 
@@ -131,10 +133,11 @@ public class Generator {
     }
 
     public func updateCustomSwiftCompilerFlags(
-        for target: String,
+        for target: String?,
         to output: URL
     ) throws {
-        let targets = project.pbxproj.targets(named: target)
+        let targetName = target ?? path.lastComponent.replacingOccurrences(of: ".xcodeproj", with: "")
+        let targets = project.pbxproj.targets(named: targetName)
 
         guard let target = targets.first else { throw Error.targetNotFound }
 
@@ -152,10 +155,11 @@ public class Generator {
         try project.pbxproj.write(path: XcodeProj.pbxprojPath(path), override: true)
     }
 
-    public func skipUpdateCustomSwiftCompilerFlags(for target: String) throws {
+    public func skipUpdateCustomSwiftCompilerFlags(for target: String?) throws {
         guard !isSilent else { return }
 
-        let targets = project.pbxproj.targets(named: target)
+        let targetName = target ?? path.lastComponent.replacingOccurrences(of: ".xcodeproj", with: "")
+        let targets = project.pbxproj.targets(named: targetName)
 
         guard let target = targets.first else { throw Error.targetNotFound }
 
@@ -234,10 +238,16 @@ public extension {{ENV_NAME}} {
 
     public static func setVersionFormat(_ format: Format) {
         defaultFormat = format
+        #if os(iOS)
+        {{ENV_NAME}}.info.update()
+        #endif
     }
 
     public static func setVersionFormat(_ format: Format, for environment: {{ENV_NAME}}) {
         formatForEnvironment[environment] = format
+        #if os(iOS)
+        {{ENV_NAME}}.info.update()
+        #endif
     }
 
     public enum Format {
@@ -309,12 +319,13 @@ public extension {{ENV_NAME}} {
         }
 
         public func showVersion() {
-            setupWindowIfNeeded()
-            uiwindow?.isHidden = false
+            isHidden = false
+            update()
         }
 
         public func hideVersion() {
-            uiwindow?.isHidden = true
+            isHidden = true
+            update()
         }
 
         private var uiwindow: UIWindow?
@@ -367,7 +378,7 @@ public extension {{ENV_NAME}} {
             label.bottomAnchor.constraint(equalTo: dummy.view.bottomAnchor, constant: -1).isActive = true
             label.heightAnchor.constraint(equalToConstant: 12).isActive = true
             label.font = UIFont.systemFont(ofSize: 8)
-            label.text = Environment.current.formattedInfo
+            label.text = {{ENV_NAME}}.current.formattedInfo
             label.textAlignment = textAlignment
             label.textColor = textColor
             label.shadowColor = shadowColor
@@ -377,12 +388,16 @@ public extension {{ENV_NAME}} {
             self.label = label
         }
 
-        private func update() {
+        fileprivate func update() {
+            if !isHidden {
+                setupWindowIfNeeded()
+            }
             label?.text = {{ENV_NAME}}.current.formattedInfo
             label?.textAlignment = textAlignment
             label?.textColor = textColor
             label?.shadowColor = shadowColor
-            isHidden ? hideVersion() : showVersion()
+
+            uiwindow?.isHidden = isHidden
         }
     }
 }
