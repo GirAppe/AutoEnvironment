@@ -8,6 +8,8 @@ App environment model generation from project build configurations.
 
 In iOS it provides a feature to show app environment and version info (configurable format) on top of all views. It is effectively "watermarking" all the screenshots the testers might take with relevant version info.
 
+![Version info](autoenv-overview.png)
+
 ## Contents
 
 1. [Overview](#overview)
@@ -144,6 +146,24 @@ For iOS, generated enum contains additional feature to show current app version 
 
 It will look something like:
 
-// iamge
+![Version info](version-info.png)
+
+Example code to show version info:
+
+```swift
+if Environment.current != .release {
+    Environment.info.showVersion()
+}
+```
+
+You can setup version info:
+
+```swift
+Environment.info.textAlignment = .left
+Environment.info.textColor = .black
+Environment.info.shadowColor = .blue
+Environment.setVersionFormat(.full)
+Environment.setVersionFormat(.simple, for: .release)
+```
 
 Version info for tvOS is work in progress.
