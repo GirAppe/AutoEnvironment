@@ -393,10 +393,10 @@ public extension {{ENV_NAME}} {
             label.textAlignment = textAlignment
             label.textColor = textColor
             label.shadowColor = shadowColor
-            #if swift(>=4.0)
-            dummy.view.bringSubview(toFront: label)
-            #else
+            #if swift(>=4.2)
             dummy.view.bringSubviewToFront(label)
+            #else
+            dummy.view.bringSubview(toFront: label)
             #endif
 
             self.uiwindow = window

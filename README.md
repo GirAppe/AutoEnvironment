@@ -6,14 +6,14 @@
 
 App environment model generation from project build configurations.
 
-In iOS it provides a feature to show app environment and version info (configurable format) on top of all views. It is actually "watermarking" all the screenshots the testers might take with relevant version info.
+In iOS it provides a feature to show app environment and version info (configurable format) on top of all views. It is effectively "watermarking" all the screenshots the testers might take with relevant version info.
 
 ## Contents
 
 1. [Overview](#overview)
 2. [Setup](#setup)
-    1. [Mint](#setup-mint)
-    2. [Swift Package Manager](#setup-spm)
+    * [Mint](#setup-mint)
+    * [Swift Package Manager](#setup-spm)
 3. [Usage](#usage)
 4. [Version Info feature](#version-info)
 
