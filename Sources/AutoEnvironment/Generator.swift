@@ -19,7 +19,11 @@ public class Generator {
     // MARK: - Lifecycle
 
     public init(project input: URL) throws {
-        path = Path(input.path)
+        if input.path.hasSuffix("/") {
+            path = Path(String(input.path.dropLast()))
+        } else {
+            path = Path(input.path)
+        }
         project = try XcodeProj(path: path)
     }
 
