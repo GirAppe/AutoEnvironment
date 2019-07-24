@@ -226,7 +226,7 @@ public enum {{ENV_NAME}}: String {
 
 public extension {{ENV_NAME}} {
 
-    public var formattedInfo: String {
+    var formattedInfo: String {
         var value = (formatForEnvironment[self] ?? defaultFormat).string
         value = value.replacingOccurrences(
             of: Format.Key.environmentName.rawValue,
@@ -243,21 +243,21 @@ public extension {{ENV_NAME}} {
         return value
     }
 
-    public static func setVersionFormat(_ format: Format) {
+    static func setVersionFormat(_ format: Format) {
         defaultFormat = format
         #if os(iOS)
         {{ENV_NAME}}.info.update()
         #endif
     }
 
-    public static func setVersionFormat(_ format: Format, for environment: {{ENV_NAME}}) {
+    static func setVersionFormat(_ format: Format, for environment: {{ENV_NAME}}) {
         formatForEnvironment[environment] = format
         #if os(iOS)
         {{ENV_NAME}}.info.update()
         #endif
     }
 
-    public enum Format {
+    enum Format {
         public enum Key: String {
             case environmentName
             case environmentFirstLetter
@@ -287,20 +287,20 @@ public extension {{ENV_NAME}} {
 
 public extension {{ENV_NAME}} {
 
-    public var name: String {
+    var name: String {
         return rawValue.capitalized
     }
 
-    public var abbreviatedName: String {
+    var abbreviatedName: String {
         return String(name.first!).capitalized
     }
 
-    public var appVersion: String {
+    var appVersion: String {
         guard let infoDictionary = Bundle.main.infoDictionary else { return "unknown" }
         return infoDictionary["CFBundleShortVersionString"] as? String ?? "unknown"
     }
 
-    public var appBuildNumber: String {
+    var appBuildNumber: String {
         guard let infoDictionary = Bundle.main.infoDictionary else { return "unknown" }
         return infoDictionary["CFBundleVersion"] as? String ?? "unknown"
     }
@@ -340,9 +340,9 @@ public extension {{ENV_NAME}} {
     }
 
     /// Info container - allows showing environment/configuration version information on top of everything
-    public static var info = Info()
+    static var info = Info()
 
-    public class Info {
+    class Info {
         public var isHidden: Bool = true {
             didSet { update() }
         }
