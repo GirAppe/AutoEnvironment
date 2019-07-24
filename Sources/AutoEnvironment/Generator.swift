@@ -307,7 +307,38 @@ public extension {{ENV_NAME}} {
 }
 
 #if os(iOS)
+fileprivate class DummyViewController: UIViewController {
+    fileprivate static var shared = DummyViewController()
+    fileprivate static var preferredStatusBarStyle: UIStatusBarStyle = .default {
+        didSet { shared.setNeedsStatusBarAppearanceUpdate() }
+    }
+
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return DummyViewController.preferredStatusBarStyle
+    }
+}
+
 public extension {{ENV_NAME}} {
+    enum BarType {
+        case white
+        case black
+    }
+    static var statusBar: BarType {
+        get {
+            switch DummyViewController.preferredStatusBarStyle {
+            case .default: return .black
+            case .lightContent: return .white
+            @unknown default: return .white
+            }
+        }
+        set {
+            switch newValue {
+            case .black: DummyViewController.preferredStatusBarStyle = .default
+            case .white: DummyViewController.preferredStatusBarStyle = .lightContent
+            }
+        }
+    }
+
     /// Info container - allows showing environment/configuration version information on top of everything
     public static var info = Info()
 
@@ -346,13 +377,13 @@ public extension {{ENV_NAME}} {
             let window = UIWindow(frame: UIScreen.main.bounds)
             window.backgroundColor = .clear
             #if swift(>=4.2)
-            window.windowLevel = UIWindow.Level.alert + 1
+                window.windowLevel = UIWindow.Level.alert + 1
             #else
-            window.windowLevel = UIWindowLevelAlert + 1
+                window.windowLevel = UIWindowLevelAlert + 1
             #endif
             window.isUserInteractionEnabled = false
 
-            let dummy = UIViewController()
+            let dummy = DummyViewController.shared
             dummy.view.backgroundColor = UIColor.clear
             window.rootViewController = dummy
 
@@ -394,12 +425,12 @@ public extension {{ENV_NAME}} {
             label.textColor = textColor
             label.shadowColor = shadowColor
             #if swift(>=4.2)
-            dummy.view.bringSubviewToFront(label)
+                dummy.view.bringSubviewToFront(label)
             #else
-            dummy.view.bringSubview(toFront: label)
+                dummy.view.bringSubview(toFront: label)
             #endif
 
-            self.uiwindow = window
+            uiwindow = window
             self.label = label
         }
 
