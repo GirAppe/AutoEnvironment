@@ -108,7 +108,7 @@ public class Generator {
 
         // Prepare
         var cases = configurations.map { name -> String in
-            return "    case \(name.lowercased().sanitized) = \"\(name.uppercased())\""
+            return "    case \(name.lowercased().sanitized) = \"\(name.uppercased().sanitized)\""
         }.joined(separator: "\n")
 
         if defaultConfig == nil && !configurations.contains("Release") {
@@ -156,7 +156,7 @@ public class Generator {
 
         // Update project compile flags
         target.buildConfigurationList?.buildConfigurations.forEach { buildConfig in
-            let flag = "-D\(buildConfig.name.uppercased())"
+            let flag = "-D\(buildConfig.name.uppercased().sanitized)"
             var flags = buildConfig.buildSettings["OTHER_SWIFT_FLAGS"] as? [String] ?? []
             guard !flags.contains(flag) else { return }
 
