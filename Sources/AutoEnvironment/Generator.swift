@@ -3,6 +3,12 @@ import xcodeproj
 import PathKit
 import Crayon
 
+private extension String {
+    var sanitized: String {
+        return self.replacingOccurrences(of: "-", with: "_")
+    }
+}
+
 public class Generator {
     public enum Error: Swift.Error {
         case targetNotFound
@@ -102,7 +108,7 @@ public class Generator {
 
         // Prepare
         var cases = configurations.map { name -> String in
-            return "    case \(name.lowercased()) = \"\(name.uppercased())\""
+            return "    case \(name.lowercased().sanitized) = \"\(name.uppercased())\""
         }.joined(separator: "\n")
 
         if defaultConfig == nil && !configurations.contains("Release") {
@@ -112,13 +118,13 @@ public class Generator {
         let current = configurations.enumerated().map { offet, name -> String in
             let statement = offet == 0 ? "#if" : "#elseif"
             return """
-                    \(statement) \(name.uppercased())
-                    return .\(name.lowercased())
+                    \(statement) \(name.uppercased().sanitized)
+                    return .\(name.lowercased().sanitized)
             """
         }.joined(separator: "\n")
 
         let defaultEnvironment: String = {
-            if let config = defaultConfig?.lowercased() {
+            if let config = defaultConfig?.lowercased().sanitized {
                 return "        return .\(config)"
             } else if configurations.contains("Release") {
                 return "        return .release"
@@ -154,6 +160,10 @@ public class Generator {
             var flags = buildConfig.buildSettings["OTHER_SWIFT_FLAGS"] as? [String] ?? []
             guard !flags.contains(flag) else { return }
 
+            if !flags.contains("$(inherited)") {
+                flags.append("$(inherited)")
+            }
+
             flags.append(flag)
             buildConfig.buildSettings["OTHER_SWIFT_FLAGS"] = flags
         }
@@ -178,7 +188,7 @@ public class Generator {
 
         // Just print
         target.buildConfigurationList?.buildConfigurations.forEach { buildConfig in
-            let flag = "-D\(buildConfig.name.uppercased())"
+            let flag = "-D\(buildConfig.name.uppercased().sanitized)"
             print("  * " + crayon.yellow.on("\(flag) for \(buildConfig.name)"))
         }
         print("")
