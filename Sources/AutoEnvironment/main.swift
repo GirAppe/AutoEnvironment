@@ -7,7 +7,7 @@ import Crayon
 
 // MARK: - Requirements
 var isSilent: Bool = false
-let version = "0.2.0"
+let version = "0.3.0"
 
 let requirements = Requirements(
     usage: "autoenvironment <options>",
